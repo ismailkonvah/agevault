@@ -22,7 +22,7 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                 const inst = await createInstance({
                     chainId: 11155111,
                     networkUrl: import.meta.env.VITE_SEPOLIA_RPC_URL,
-                    gatewayUrl: "https://relayer.testnet.zama.cloud",
+                    gatewayUrl: "https://relayer.testnet.zama.org",
                     kmsContractAddress: "0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A",
                     aclContractAddress: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D",
                 });
