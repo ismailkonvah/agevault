@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GlowCard } from "@/components/GlowCard";
-import { WalletButton } from "@/components/WalletButton";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { EncryptionAnimation } from "@/components/EncryptionAnimation";
 import { useWallet } from "@/hooks/useWallet";
 import { useAgeVerification } from "@/hooks/useAgeVerification";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAccount } from 'wagmi';
+import { ZamaStatusIndicator } from "@/components/ZamaStatusIndicator";
 
 export default function Dashboard() {
-  const wallet = useWallet();
+  const { isConnected, address } = useAccount();
   const verification = useAgeVerification();
   const { toast } = useToast();
   const [ageInput, setAgeInput] = useState("");
@@ -45,40 +47,29 @@ export default function Dashboard() {
             <p className="text-muted-foreground">
               Submit your encrypted age for private verification.
             </p>
+            <div className="mt-2">
+              <ZamaStatusIndicator />
+            </div>
           </div>
-          <WalletButton
-            isConnected={wallet.isConnected}
-            isConnecting={wallet.isConnecting}
-            address={wallet.address}
-            truncatedAddress={wallet.truncatedAddress}
-            onConnect={wallet.connect}
-            onDisconnect={wallet.disconnect}
-          />
+          <ConnectButton />
         </div>
 
         {/* Not connected state */}
-        {!wallet.isConnected && (
+        {!isConnected && (
           <GlowCard className="text-center py-12">
             <Shield className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-xl font-semibold mb-2">Connect Your Wallet</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               To submit your encrypted age, please connect your wallet first.
             </p>
-            <Button
-              onClick={wallet.connect}
-              disabled={wallet.isConnecting}
-              className={cn(
-                "dark:bg-gradient-to-r dark:from-neon-purple dark:to-neon-cyan",
-                "dark:hover:shadow-[0_0_20px_hsl(var(--neon-purple)/0.5)]"
-              )}
-            >
-              Connect Wallet
-            </Button>
+            <div className="flex justify-center">
+              <ConnectButton />
+            </div>
           </GlowCard>
         )}
 
         {/* Connected state */}
-        {wallet.isConnected && (
+        {isConnected && (
           <div className="space-y-6">
             {/* Submit Age Card */}
             <GlowCard glowColor="purple">

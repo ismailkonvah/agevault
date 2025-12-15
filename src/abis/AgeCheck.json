@@ -1,0 +1,39 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "user",
+                "type": "address"
+            }
+        ],
+        "name": "hasEncryptedAge",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "externalEuint8",
+                "name": "encryptedAge",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes",
+                "name": "inputProof",
+                "type": "bytes"
+            }
+        ],
+        "name": "submitAge",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

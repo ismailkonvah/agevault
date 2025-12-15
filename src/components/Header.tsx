@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -43,6 +44,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ConnectButton />
           <ThemeToggle />
         </div>
       </div>
