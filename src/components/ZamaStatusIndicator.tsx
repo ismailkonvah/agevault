@@ -34,8 +34,8 @@ export function ZamaStatusIndicator() {
         };
 
         fetchStatus();
-        // Refresh every 60 seconds
-        const interval = setInterval(fetchStatus, 60000);
+        // Refresh every 5 minutes (reduced to minimize CORS errors in production)
+        const interval = setInterval(fetchStatus, 300000);
         return () => clearInterval(interval);
     }, []);
 
