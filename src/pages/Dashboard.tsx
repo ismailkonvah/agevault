@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Send, History, CheckCircle, AlertCircle } from "lucide-react";
+import { Shield, Send, History, CheckCircle, AlertCircle, Loader2, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +12,11 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAccount } from 'wagmi';
 import { ZamaStatusIndicator } from "@/components/ZamaStatusIndicator";
+import { useFhevm } from "@/FhevmProvider";
 
 export default function Dashboard() {
   const { isConnected, address } = useAccount();
+  const { instance, isReady, error } = useFhevm();
   const verification = useAgeVerification();
   const { toast } = useToast();
   const [ageInput, setAgeInput] = useState("");
@@ -30,11 +32,38 @@ export default function Dashboard() {
       return;
     }
 
-    await verification.submitAge(age);
-    toast({
-      title: "Age encrypted successfully!",
-      description: "Your encrypted age has been stored on-chain.",
-    });
+    if (!isConnected) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await verification.submitAge(age);
+      if (result) {
+        toast({
+          title: "Age encrypted successfully!",
+          description: "Your encrypted age has been stored on-chain.",
+        });
+        setAgeInput(""); // Clear input on success
+      } else {
+        toast({
+          title: "Encryption failed",
+          description: "Failed to encrypt and submit age. Please check the console for details.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error submitting age:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "An error occurred while encrypting your age.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -53,6 +82,46 @@ export default function Dashboard() {
           </div>
           <ConnectButton />
         </div>
+
+        {/* FHEVM Error State */}
+        {error && (
+          <GlowCard className="border-destructive/50 bg-destructive/5">
+            <div className="flex items-start gap-4">
+              <div className="rounded-full bg-destructive/10 p-3">
+                <WifiOff className="h-6 w-6 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-destructive mb-1">FHEVM Initialization Error</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {error}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>💡 <strong>Troubleshooting tips:</strong></p>
+                  <ul className="list-disc list-inside ml-4 space-y-1">
+                    <li>Ensure <code className="bg-muted px-1 py-0.5 rounded">VITE_SEPOLIA_RPC_URL</code> is set in your <code className="bg-muted px-1 py-0.5 rounded">.env</code> file</li>
+                    <li>Check that your RPC URL is valid and accessible</li>
+                    <li>Verify the Zama relayer is online at <a href="https://status.zama.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">status.zama.org</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </GlowCard>
+        )}
+
+        {/* FHEVM Loading State */}
+        {!error && !isReady && (
+          <GlowCard className="border-primary/50 bg-primary/5">
+            <div className="flex items-center gap-4">
+              <Loader2 className="h-6 w-6 text-primary animate-spin" />
+              <div>
+                <h3 className="font-semibold text-primary mb-1">Initializing FHEVM...</h3>
+                <p className="text-sm text-muted-foreground">
+                  Connecting to Zama's Fully Homomorphic Encryption network. This may take a few moments.
+                </p>
+              </div>
+            </div>
+          </GlowCard>
+        )}
 
         {/* Not connected state */}
         {!isConnected && (
@@ -100,15 +169,16 @@ export default function Dashboard() {
                       />
                       <Button
                         onClick={handleSubmitAge}
-                        disabled={!ageInput || verification.isEncrypting}
+                        disabled={!ageInput || verification.isEncrypting || !isReady}
                         className={cn(
                           "gap-2",
                           "dark:bg-gradient-to-r dark:from-neon-purple dark:to-neon-cyan",
                           "dark:hover:shadow-[0_0_20px_hsl(var(--neon-purple)/0.5)]"
                         )}
+                        title={!isReady ? "FHEVM is initializing..." : ""}
                       >
                         <Send className="h-4 w-4" />
-                        Encrypt & Submit
+                        {!isReady ? "Initializing..." : "Encrypt & Submit"}
                       </Button>
                     </div>
                   </div>

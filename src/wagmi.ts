@@ -1,8 +1,17 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { sepolia } from 'wagmi/chains';
 
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID';
+
+if (projectId === 'YOUR_PROJECT_ID') {
+  console.warn(
+    '⚠️ WalletConnect Project ID not set. Please set VITE_WALLETCONNECT_PROJECT_ID in your .env file. ' +
+    'Get one at https://cloud.walletconnect.com'
+  );
+}
+
 export const config = getDefaultConfig({
   appName: 'Private Age Check',
-  projectId: 'YOUR_PROJECT_ID', // Get one at https://cloud.walletconnect.com
+  projectId,
   chains: [sepolia],
 });

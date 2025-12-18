@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, CheckCircle, XCircle, Shield, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GlowCard } from "@/components/GlowCard";
 import { useAgeVerification } from "@/hooks/useAgeVerification";
+import { useReadContract } from "wagmi";
+import AgeCheckABI from "@/abis/AgeCheck.json";
 import { cn } from "@/lib/utils";
 
 const verificationOptions = [
@@ -22,32 +24,60 @@ export default function Verify() {
   >({});
   const [verifyingThreshold, setVerifyingThreshold] = useState<number | null>(null);
 
+  // Check if the searched user has submitted an age
+  const { data: userHasAge, refetch: checkUserAge, isLoading: checkingAge } = useReadContract({
+    address: verification.contractAddress,
+    abi: AgeCheckABI,
+    functionName: "hasEncryptedAge",
+    args: walletAddress && walletAddress.startsWith("0x") && walletAddress.length === 42 
+      ? [walletAddress as `0x${string}`] 
+      : undefined,
+    query: {
+      enabled: false, // We'll trigger this manually
+    },
+  });
+
   const handleSearch = async () => {
     if (!walletAddress) return;
+    
+    // Validate address format
+    if (!walletAddress.startsWith("0x") || walletAddress.length !== 42) {
+      setFoundUser(false);
+      return;
+    }
+
     setIsSearching(true);
     setVerificationResults({});
+    setFoundUser(false);
 
-    // Simulate search delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // For demo: always find a user if address looks valid
-    setFoundUser(walletAddress.startsWith("0x") && walletAddress.length >= 10);
-    setIsSearching(false);
+    try {
+      // Check if user has submitted an age on-chain
+      const result = await checkUserAge();
+      const hasAge = result.data as boolean;
+      setFoundUser(hasAge === true);
+    } catch (e) {
+      console.error("Failed to check user age:", e);
+      setFoundUser(false);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleVerify = async (threshold: number) => {
+    if (!walletAddress || !foundUser) return;
+    
     setVerifyingThreshold(threshold);
+    setVerificationResults((prev) => ({ ...prev, [threshold]: null }));
     
-    // Simulate verification
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // For demo: random result (or use actual state if available)
-    const result = verification.currentAge 
-      ? verification.currentAge >= threshold 
-      : Math.random() > 0.3;
-    
-    setVerificationResults((prev) => ({ ...prev, [threshold]: result }));
-    setVerifyingThreshold(null);
+    try {
+      const result = await verification.verifyAge(walletAddress, threshold);
+      setVerificationResults((prev) => ({ ...prev, [threshold]: result }));
+    } catch (e) {
+      console.error("Verification failed:", e);
+      setVerificationResults((prev) => ({ ...prev, [threshold]: false }));
+    } finally {
+      setVerifyingThreshold(null);
+    }
   };
 
   return (
@@ -99,7 +129,7 @@ export default function Verify() {
           </div>
 
           <p className="text-xs text-muted-foreground mt-2">
-            Demo tip: Enter any address starting with "0x" to simulate finding a user.
+            Enter a wallet address to check if they have submitted an encrypted age.
           </p>
         </GlowCard>
 

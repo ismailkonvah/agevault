@@ -6,10 +6,6 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
@@ -30,11 +26,31 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     exclude: ["fhevmjs"],
     include: ["keccak", "bigint-buffer"],
+    // Ensure WebAssembly is handled correctly
+    esbuildOptions: {
+      target: "esnext",
+    },
   },
   build: {
     target: "esnext",
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    // Ensure WebAssembly files are handled correctly
+    rollupOptions: {
+      output: {
+        // Preserve WebAssembly files
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.wasm')) {
+            return 'assets/[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
+  },
+  server: {
+    host: "::",
+    port: 8080,
   },
 }));
