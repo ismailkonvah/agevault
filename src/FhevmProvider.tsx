@@ -40,9 +40,8 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                 const kmsContractAddress = '0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A';
 
                 // Gateway URL - fhevmjs uses the gateway endpoint to fetch the public key
-                // This is different from the relayer URL used for decryption operations
-                // See: https://docs.zama.org/protocol/solidity-guides/smart-contract/configure/contract_addresses
-                const gatewayUrl = import.meta.env.VITE_ZAMA_GATEWAY_URL || 'https://gateway.sepolia.zama.ai';
+                // Note: As of late 2024/2025, Zama has moved to the .org domain
+                const gatewayUrl = import.meta.env.VITE_ZAMA_GATEWAY_URL || 'https://relayer.testnet.zama.org';
 
                 console.log("FHEVM Config:", {
                     chainId: 11155111,
@@ -80,9 +79,9 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                 setInstance(null);
 
                 // Provide helpful error messages
-                if (errorMessage.includes('relayer') || errorMessage.includes('public key')) {
-                    console.error("💡 Tip: Check that the relayer URL is correct and accessible");
-                    console.error("   Current relayer URL: https://relayer.testnet.zama.org");
+                if (errorMessage.includes('relayer') || errorMessage.includes('gateway') || errorMessage.includes('public key')) {
+                    console.error("💡 Tip: Check that the gateway URL is correct and accessible");
+                    console.error("   Current gateway URL: https://relayer.testnet.zama.org");
                 }
                 if (errorMessage.includes('network') || errorMessage.includes('RPC')) {
                     console.error("💡 Tip: Verify your RPC URL is correct and you have network access");
