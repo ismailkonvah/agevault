@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useFhevm } from "../FhevmProvider";
 import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useFhevmOperations } from "@fhevm-sdk/adapters/react";
 import AgeCheckABI from "../abis/AgeCheck.json";
 
 const CONTRACT_ADDRESS = (import.meta.env.VITE_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000") as `0x${string}`;
@@ -44,6 +45,8 @@ export function useAgeVerification() {
   const { instance, isReady, error: fhevmError } = useFhevm();
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { encrypt, decrypt, isBusy: sdkBusy, message: sdkMessage } = useFhevmOperations();
+
   const { data: hasAge, refetch: refetchHasAge } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: AgeCheckABI,
@@ -56,9 +59,9 @@ export function useAgeVerification() {
 
   const submitAge = useCallback(async (age: number): Promise<string> => {
     if (!instance || !isReady || !address) {
-      const errorMsg = fhevmError 
+      const errorMsg = fhevmError
         ? `FHEVM initialization failed: ${fhevmError}`
-        : !instance 
+        : !instance
           ? "FHEVM instance not initialized"
           : !isReady
             ? "FHEVM instance not ready"
@@ -70,44 +73,20 @@ export function useAgeVerification() {
     setState((prev) => ({ ...prev, isEncrypting: true, currentAge: age }));
 
     try {
-      console.log("Starting encryption for age:", age);
+      console.log("Starting encryption for age via SDK...");
 
-      // 1. Create encrypted input for the specific contract and user
-      // This binds the encryption to the contract address and user address to prevent replay attacks
-      // Based on fhevm-react-template pattern
-      if (!instance.createEncryptedInput) {
-        throw new Error("FHEVM instance does not have createEncryptedInput method");
-      }
-      
-      const input = instance.createEncryptedInput(CONTRACT_ADDRESS, address);
+      // Use the SDK's encrypt operation
+      const encryptedInput = await encrypt(CONTRACT_ADDRESS, address, age, 'euint8');
 
-      // 2. Add the 8-bit integer value (age)
-      if (!input.add8) {
-        throw new Error("Encrypted input does not have add8 method");
-      }
-      input.add8(age);
-
-      // 3. Encrypt - This will trigger the Wallet signature request (EIP-712)
-      // The encrypt() method will automatically use window.ethereum for signing
-      console.log("Requesting EIP-712 signature from wallet...");
-      console.log("💡 A wallet signature popup should appear. Please approve it to continue.");
-      
-      if (!input.encrypt) {
-        throw new Error("Encrypted input does not have encrypt method");
-      }
-      
-      const encryptedInput = await input.encrypt();
-      console.log("✅ Encryption successful, generated handles and proof", {
+      console.log("✅ Encryption successful via SDK", {
         handlesCount: encryptedInput.handles?.length || 0,
         hasProof: !!encryptedInput.inputProof
       });
 
-      // Extract the handle (ciphertext) and the input proof
-      // handles[0] corresponds to the first added value (age)
       const encryptedAgeHandle = encryptedInput.handles[0];
       const inputProof = encryptedInput.inputProof;
 
-      // Convert handle to hex string for display/logging if needed
+      // Convert handle to hex string for display
       const encryptedAgeHex = "0x" + Array.from(encryptedAgeHandle)
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
@@ -116,7 +95,6 @@ export function useAgeVerification() {
 
       if (CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
         console.log("Submitting to contract...");
-        // Call the smart contract with the handle and proof
         txHash = await writeContractAsync({
           address: CONTRACT_ADDRESS,
           abi: AgeCheckABI,
@@ -147,19 +125,10 @@ export function useAgeVerification() {
     } catch (e: any) {
       console.error("Encryption/Submission failed:", e);
       const errorMessage = e?.message || 'Unknown error during encryption/submission';
-      console.error("Error details:", {
-        message: errorMessage,
-        stack: e?.stack,
-        cause: e?.cause,
-        error: e
-      });
-      
       setState((prev) => ({ ...prev, isEncrypting: false }));
-      
-      // Re-throw with helpful message so UI can display it
       throw new Error(errorMessage);
     }
-  }, [instance, isReady, address, writeContractAsync, fhevmError]);
+  }, [instance, isReady, address, writeContractAsync, fhevmError, encrypt]);
 
   const verifyAge = useCallback(
     async (userAddress: string, threshold: number): Promise<boolean | null> => {
@@ -193,7 +162,7 @@ export function useAgeVerification() {
         // 1. Wait for transaction confirmation
         // 2. Use FHEVM instance to decrypt the result (requires authorization/relayer)
         // 3. Or use a relayer service to handle decryption
-        
+
         // For now, we'll indicate that verification was initiated
         // The actual boolean result would come from decrypting the ebool
         // This is a limitation that needs to be addressed for full functionality

@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@fhevm-sdk": path.resolve(__dirname, "./fhevm-sdk/src"),
     },
   },
   optimizeDeps: {

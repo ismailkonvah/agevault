@@ -1,0 +1,56 @@
+{
+    "name": "@fhevm-sdk/core",
+    "version": "0.1.0",
+    "description": "A framework-agnostic frontend toolkit for confidential dApps using FHEVM.",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format cjs,esm --dts",
+        "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
+        "lint": "eslint src/**/*.ts",
+        "test": "vitest"
+    },
+    "keywords": [
+        "fhevm",
+        "zama",
+        "blockchain",
+        "privacy",
+        "sdk",
+        "ethereum"
+    ],
+    "author": "Ismail Konvah",
+    "license": "MIT",
+    "dependencies": {
+        "fhevmjs": "^0.6.2",
+        "@zama-fhe/relayer-sdk": "^0.3.0-6",
+        "ethers": "^6.16.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.8.3",
+        "tsup": "^8.0.0",
+        "vitest": "^1.0.0",
+        "react": "^18.3.1",
+        "vue": "^3.4.0"
+    },
+    "peerDependencies": {
+        "react": ">=18",
+        "vue": ">=3"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        },
+        "vue": {
+            "optional": true
+        }
+    }
+}

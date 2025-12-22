@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-// Import from the web build of the relayer SDK for browser compatibility
-import { createInstance, SepoliaConfig, FhevmInstance } from '@zama-fhe/relayer-sdk/web';
+import { SepoliaConfig, FhevmInstance } from '@zama-fhe/relayer-sdk/web';
+import { initializeFheInstance } from '@fhevm-sdk/core/fhevm';
 
 interface FhevmContextType {
     instance: FhevmInstance | null;
@@ -24,7 +24,7 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const init = async () => {
             try {
-                console.log("Initializing FHEVM...");
+                console.log("Initializing FHEVM via SDK...");
 
                 const networkUrl = import.meta.env.VITE_SEPOLIA_RPC_URL;
 
@@ -35,11 +35,8 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                     return;
                 }
 
-                console.log("FHEVM Sepolia Config:", SepoliaConfig);
-
-                // Initialize FHEVM instance using the Relayer SDK's SepoliaConfig
-                // We only override the networkUrl (RPC provider)
-                const inst = await createInstance({
+                // Initialize FHEVM instance using the SDK's initializeFheInstance
+                const inst = await initializeFheInstance({
                     ...SepoliaConfig,
                     networkUrl: networkUrl,
                 });
