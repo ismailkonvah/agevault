@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { createInstance, FhevmInstance } from 'fhevmjs';
+// Import from the web build of the relayer SDK for browser compatibility
+import { createInstance, SepoliaConfig, FhevmInstance } from '@zama-fhe/relayer-sdk/web';
 
 interface FhevmContextType {
     instance: FhevmInstance | null;
@@ -34,31 +35,13 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                     return;
                 }
 
-                // Contract addresses from official Zama documentation for Sepolia
-                // See: https://docs.zama.org/protocol/solidity-guides/smart-contract/configure/contract_addresses
-                const aclContractAddress = '0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D';
-                const kmsContractAddress = '0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A';
-
-                // Gateway URL - fhevmjs uses the gateway endpoint to fetch the public key
-                // Note: As of late 2024/2025, Zama has moved to the .org domain
-                const gatewayUrl = import.meta.env.VITE_ZAMA_GATEWAY_URL || 'https://relayer.testnet.zama.org';
-
-                console.log("FHEVM Config:", {
-                    chainId: 11155111,
-                    networkUrl,
-                    gatewayUrl,
-                    kmsContractAddress,
-                    aclContractAddress
-                });
-
-                // Initialize FHEVM instance for Sepolia (Chain ID 11155111)
-                // The gatewayUrl is used to fetch the FHE public key
+                // Initialize FHEVM instance using the Relayer SDK's SepoliaConfig
+                // This is the standard pattern for 2025 and handles gateway orchestration better
                 const inst = await createInstance({
-                    chainId: 11155111,
-                    networkUrl,
-                    gatewayUrl,
-                    kmsContractAddress,
-                    aclContractAddress,
+                    ...SepoliaConfig,
+                    networkUrl: networkUrl, // Alchemy/Infura URL
+                    // Overrides if provided in .env
+                    gatewayUrl: import.meta.env.VITE_ZAMA_GATEWAY_URL || SepoliaConfig.gatewayUrl,
                 });
 
                 console.log("FHEVM Initialized successfully", inst);
