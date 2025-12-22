@@ -9,8 +9,16 @@ export interface FhevmConfig {
 
 let fheInstance: FhevmInstance | null = null;
 
+// Define global interface for the CDN SDK
+interface Window {
+    RelayerSDK?: any;
+    relayerSDK?: any;
+    ethereum?: any;
+}
+
 /**
  * Initializes the FHEVM instance with the provided configuration.
+ * Preference: Global CDN SDK (avoids WASM bundling issues) > npm package
  * @param config The FHEVM configuration (publicKey, chainId, etc.)
  * @returns The initialized FHEVM instance
  */
@@ -26,8 +34,22 @@ export async function initializeFheInstance(config: any): Promise<FhevmInstance>
             publicKey: config.publicKey ? '(present)' : '(missing)'
         }, null, 2));
 
+        // CHECK FOR GLOBAL SDK (TEMPLATE METHOD)
+        const globalSdk = (window as any).RelayerSDK || (window as any).relayerSDK;
+        if (globalSdk) {
+            console.log('✅ FHEVM: Found global RelayerSDK (CDN). initializing...');
+            await globalSdk.initSDK();
+            // Important: Global SDK creates instance differently, but for compatibility we use our standard config
+            // Note: The template merges config with window.ethereum manually.
+            const cdnConfig = { ...config, network: (window as any).ethereum };
+            fheInstance = await globalSdk.createInstance(cdnConfig);
+            console.log('✅ FHEVM: Instance created via CDN SDK');
+            return fheInstance;
+        }
+
+        console.log('FHEVM: Global SDK not found, falling back to bundled npm package...');
         fheInstance = await createInstance(config);
-        console.log('FHEVM: Instance created successfully');
+        console.log('FHEVM: Instance created successfully (bundled)');
         return fheInstance;
     } catch (error: any) {
         console.error('FHEVM: Failed to initialize instance:', error);

@@ -34,3 +34,5 @@ artifacts
 
 # TypeScript
 *.tsbuildinfo
+
+fhevm-react-template/
