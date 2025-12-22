@@ -38,6 +38,7 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                 // Corrected Sepolia config for current Zama testnet
                 const zamaConfig = {
                     ...SepoliaConfig,
+                    relayerUrl: "https://relayer.testnet.zama.cloud",
                     gatewayUrl: "https://relayer.testnet.zama.cloud",
                     networkUrl: networkUrl,
                 };
