@@ -35,13 +35,13 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                     return;
                 }
 
+                console.log("FHEVM Sepolia Config:", SepoliaConfig);
+
                 // Initialize FHEVM instance using the Relayer SDK's SepoliaConfig
-                // This is the standard pattern for 2025 and handles gateway orchestration better
+                // We only override the networkUrl (RPC provider)
                 const inst = await createInstance({
                     ...SepoliaConfig,
-                    networkUrl: networkUrl, // Alchemy/Infura URL
-                    // Overrides if provided in .env
-                    gatewayUrl: import.meta.env.VITE_ZAMA_GATEWAY_URL || SepoliaConfig.gatewayUrl,
+                    networkUrl: networkUrl,
                 });
 
                 console.log("FHEVM Initialized successfully", inst);
