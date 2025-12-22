@@ -35,11 +35,17 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                     return;
                 }
 
-                // Initialize FHEVM instance using the SDK's initializeFheInstance
-                const inst = await initializeFheInstance({
+                // Corrected Sepolia config for current Zama testnet
+                const zamaConfig = {
                     ...SepoliaConfig,
+                    gatewayUrl: "https://relayer.testnet.zama.cloud",
                     networkUrl: networkUrl,
-                });
+                };
+
+                console.log("FHEVM: Using configuration:", zamaConfig);
+
+                // Initialize FHEVM instance using the SDK's initializeFheInstance
+                const inst = await initializeFheInstance(zamaConfig);
 
                 console.log("FHEVM Initialized successfully", inst);
                 setInstance(inst);

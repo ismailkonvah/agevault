@@ -15,13 +15,31 @@ let fheInstance: FhevmInstance | null = null;
  * @returns The initialized FHEVM instance
  */
 export async function initializeFheInstance(config: any): Promise<FhevmInstance> {
-    if (fheInstance) return fheInstance;
+    if (fheInstance) {
+        console.log('FHEVM: Returning existing instance');
+        return fheInstance;
+    }
 
     try {
+        console.log('FHEVM: Initializing with config:', JSON.stringify({
+            ...config,
+            publicKey: config.publicKey ? '(present)' : '(missing)'
+        }, null, 2));
+
         fheInstance = await createInstance(config);
+        console.log('FHEVM: Instance created successfully');
         return fheInstance;
-    } catch (error) {
-        console.error('Failed to initialize FHEVM instance:', error);
+    } catch (error: any) {
+        console.error('FHEVM: Failed to initialize instance:', error);
+
+        // Enhance error message for common issues
+        if (error.message?.includes('public key')) {
+            console.error('FHEVM TIP: This often means the gatewayUrl/relayerUrl is incorrect or unreachable.');
+        }
+        if (error.message?.includes('__wbindgen_malloc')) {
+            console.error('FHEVM TIP: WebAssembly initialization failed. Check for version conflicts between fhevmjs components.');
+        }
+
         throw error;
     }
 }
