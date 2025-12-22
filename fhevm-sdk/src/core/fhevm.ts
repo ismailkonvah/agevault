@@ -44,13 +44,13 @@ export async function initializeFheInstance(config: any): Promise<FhevmInstance>
             const cdnConfig = { ...config, network: (window as any).ethereum };
             fheInstance = await globalSdk.createInstance(cdnConfig);
             console.log('✅ FHEVM: Instance created via CDN SDK');
-            return fheInstance;
+            return fheInstance!;
         }
 
         console.log('FHEVM: Global SDK not found, falling back to bundled npm package...');
         fheInstance = await createInstance(config);
         console.log('FHEVM: Instance created successfully (bundled)');
-        return fheInstance;
+        return fheInstance!;
     } catch (error: any) {
         console.error('FHEVM: Failed to initialize instance:', error);
 
