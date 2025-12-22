@@ -2,9 +2,10 @@
 pragma solidity ^0.8.24;
 
 import "@fhevm/solidity/lib/FHE.sol";
+import { ZamaEthereumConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
 import "encrypted-types/EncryptedTypes.sol";
 
-contract AgeCheck {
+contract AgeCheck is ZamaEthereumConfig {
     // Store encrypted age for each user
     mapping(address => euint8) internal encryptedAges;
 
