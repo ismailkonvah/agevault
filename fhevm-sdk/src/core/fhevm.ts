@@ -44,8 +44,11 @@ export async function initializeFheInstance(config: any): Promise<FhevmInstance>
                 kmsVerifier: { wasm: '/kms_lib_bg.wasm' }
             });
             // Important: Global SDK creates instance differently, but for compatibility we use our standard config
-            // Note: The template merges config with window.ethereum manually.
-            const cdnConfig = { ...config, network: (window as any).ethereum };
+            // Use networkUrl from config, or fallback to window.ethereum if available
+            const cdnConfig = { 
+                ...config, 
+                network: config.networkUrl || (window as any).ethereum 
+            };
             fheInstance = await globalSdk.createInstance(cdnConfig);
             console.log('✅ FHEVM: Instance created via CDN SDK');
             return fheInstance!;
