@@ -73,10 +73,16 @@ export function useAgeVerification() {
 
       const { encryptedData, proof } = encryptedInput;
 
-      // Convert handle for display
-      const encryptedAgeHex = "0x" + Array.from(encryptedData as Uint8Array)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      // Convert to hex strings for Wagmi/Viem compatibility
+      const toHex = (data: any) => {
+        if (data instanceof Uint8Array) {
+          return "0x" + Array.from(data).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        return data;
+      };
+
+      const encryptedDataHex = toHex(encryptedData);
+      const proofHex = toHex(proof);
 
       let txHash = "";
 
@@ -86,7 +92,7 @@ export function useAgeVerification() {
           address: CONTRACT_ADDRESS,
           abi: AgeCheckABI,
           functionName: "submitAge",
-          args: [encryptedData, proof],
+          args: [encryptedDataHex, proofHex],
         });
         console.log("Transaction sent:", txHash);
       } else {
@@ -95,7 +101,7 @@ export function useAgeVerification() {
 
       const submission: Submission = {
         id: txHash || crypto.randomUUID(),
-        encryptedAge: encryptedAgeHex,
+        encryptedAge: encryptedDataHex,
         timestamp: new Date(),
         status: "verified",
       };
@@ -106,7 +112,7 @@ export function useAgeVerification() {
         isEncrypting: false,
       }));
 
-      return encryptedAgeHex;
+      return encryptedDataHex;
     } catch (e: any) {
       console.error("Encryption/Submission failed:", e);
       setState((prev) => ({ ...prev, isEncrypting: false }));
