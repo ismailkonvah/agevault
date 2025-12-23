@@ -38,8 +38,8 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                 // Reverted to working .org config for current environment
                 const zamaConfig = {
                     ...SepoliaConfig,
-                    relayerUrl: "https://relayer.testnet.zama.cloud",
-                    gatewayUrl: "https://relayer.testnet.zama.cloud",
+                    relayerUrl: "https://relayer.testnet.zama.org",
+                    gatewayUrl: "https://relayer.testnet.zama.org",
                     networkUrl: networkUrl,
                 };
 
@@ -68,7 +68,7 @@ export const FhevmProvider = ({ children }: { children: ReactNode }) => {
                 // Provide helpful error messages
                 if (errorMessage.includes('relayer') || errorMessage.includes('gateway') || errorMessage.includes('public key')) {
                     console.error("💡 Tip: Check that the gateway URL is correct and accessible");
-                    console.error("   Current gateway URL: https://relayer.testnet.zama.cloud");
+                    console.error("   Current gateway URL: https://relayer.testnet.zama.org");
                 }
                 if (errorMessage.includes('network') || errorMessage.includes('RPC')) {
                     console.error("💡 Tip: Verify your RPC URL is correct and you have network access");
