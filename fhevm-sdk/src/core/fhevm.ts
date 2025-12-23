@@ -38,17 +38,29 @@ export async function initializeFheInstance(config: any): Promise<FhevmInstance>
         const globalSdk = (window as any).RelayerSDK || (window as any).relayerSDK;
         if (globalSdk) {
             console.log('✅ FHEVM: Found global RelayerSDK (CDN). initializing...');
-            // FIX: Initialize with local WASM paths to avoid CDN fetch
-            await globalSdk.initSDK({
-                tfhe: { wasm: '/tfhe_bg.wasm' },
-                kmsVerifier: { wasm: '/kms_lib_bg.wasm' }
-            });
-            // Important: Global SDK creates instance differently, but for compatibility we use our standard config
-            // Use networkUrl from config, or fallback to window.ethereum if available
-            const cdnConfig = { 
-                ...config, 
-                network: config.networkUrl || (window as any).ethereum 
+
+            // Initialize SDK with local WASM files
+            try {
+                await globalSdk.initSDK({
+                    tfhe: { wasm: '/tfhe_bg.wasm' },
+                    kmsVerifier: { wasm: '/kms_lib_bg.wasm' }
+                });
+                console.log('✅ FHEVM: SDK initialized with local WASM files');
+            } catch (initError: any) {
+                console.warn('⚠️ FHEVM: Failed to init SDK with local WASM, will try default:', initError.message);
+            }
+
+            // Create instance with network URL as string
+            const cdnConfig = {
+                ...config,
+                network: config.networkUrl  // Always use networkUrl, not window.ethereum
             };
+
+            console.log('FHEVM: Creating instance with config:', {
+                ...cdnConfig,
+                networkUrl: cdnConfig.networkUrl || '(missing)'
+            });
+
             fheInstance = await globalSdk.createInstance(cdnConfig);
             console.log('✅ FHEVM: Instance created via CDN SDK');
             return fheInstance!;
