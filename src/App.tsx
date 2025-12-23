@@ -14,6 +14,7 @@ import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { config } from './wagmi';
 import { FhevmProvider } from './FhevmProvider';
+import { Analytics } from "@vercel/analytics/react";
 import '@rainbow-me/rainbowkit/styles.css';
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
                   </main>
                 </div>
               </BrowserRouter>
+              <Analytics />
             </TooltipProvider>
           </ThemeProvider>
         </FhevmProvider>
