@@ -9,12 +9,11 @@ export function useEncrypt() {
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const encrypt = useCallback(async (contractAddress: string, userAddress: string, value: number) => {
-    setIsEncrypting(true);
-    setError('');
-    
+  const encrypt = useCallback(async (contractAddress: string, userAddress: string, value: number, bits?: 8 | 16 | 32 | 64 | 128 | 256) => {
     try {
-      const result = await createEncryptedInput(contractAddress, userAddress, value);
+      setIsEncrypting(true);
+      setError('');
+      const result = await createEncryptedInput(contractAddress, userAddress, value, bits);
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Encryption failed');

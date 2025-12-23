@@ -273,14 +273,21 @@ export async function encryptValue(
 /**
  * Create encrypted input for contract interaction (matches showcase API)
  */
-export async function createEncryptedInput(contractAddress: string, userAddress: string, value: number) {
+export async function createEncryptedInput(contractAddress: string, userAddress: string, value: number, bits: 8 | 16 | 32 | 64 | 128 | 256 = 32) {
   const fhe = getFheInstance();
   if (!fhe) throw new Error('FHE instance not initialized. Call initializeFheInstance() first.');
 
-  console.log(`🔐 Creating encrypted input for contract ${contractAddress}, user ${userAddress}, value ${value}`);
+  console.log(`🔐 Creating encrypted ${bits}-bit input for contract ${contractAddress}, user ${userAddress}, value ${value}`);
 
   const inputHandle = fhe.createEncryptedInput(contractAddress, userAddress);
-  inputHandle.add32(value);
+
+  if (bits === 8) inputHandle.add8(value);
+  else if (bits === 16) inputHandle.add16(value);
+  else if (bits === 32) inputHandle.add32(value);
+  else if (bits === 64) inputHandle.add64(value);
+  else if (bits === 128) inputHandle.add128(value);
+  else if (bits === 256) inputHandle.add256(value);
+
   const result = await inputHandle.encrypt();
 
   console.log('✅ Encrypted input created successfully');
