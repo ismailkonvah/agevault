@@ -41,6 +41,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@rainbow-me/rainbowkit": "^2.2.10",
     "@tanstack/react-query": "^5.83.0",
+    "@vercel/analytics": "^1.6.1",
     "@zama-fhe/relayer-sdk": "^0.3.0-6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
