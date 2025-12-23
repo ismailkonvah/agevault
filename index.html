@@ -29,6 +29,21 @@
     };
   </script>
   <script src="/relayer-sdk.js"></script>
+  <script>
+    // FIX: Initialize SDK with correct WASM paths
+    if (window.RelayerSDK || window.relayerSDK) {
+      const SDK = window.RelayerSDK || window.relayerSDK;
+      console.log('🔧 Initializing Relayer SDK with WASM paths...');
+      SDK.initSDK({
+        tfheParams: { wasmUrl: '/tfhe_bg.wasm' },
+        kmsParams: { wasmUrl: '/kms_lib_bg.wasm' }
+      }).then(() => {
+        console.log('✅ Relayer SDK initialized with WASM files');
+      }).catch(err => {
+        console.error('❌ SDK initialization failed:', err);
+      });
+    }
+  </script>
 </head>
 
 <body>
