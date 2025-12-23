@@ -80,30 +80,7 @@ export default function Dashboard() {
           <ConnectButton />
         </div>
 
-        {/* FHEVM Error State */}
-        {error && (
-          <GlowCard className="border-destructive/50 bg-destructive/5">
-            <div className="flex items-start gap-4">
-              <div className="rounded-full bg-destructive/10 p-3">
-                <WifiOff className="h-6 w-6 text-destructive" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-destructive mb-1">FHEVM Initialization Error</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {error}
-                </p>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p>💡 <strong>Troubleshooting tips:</strong></p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>Ensure <code className="bg-muted px-1 py-0.5 rounded">VITE_SEPOLIA_RPC_URL</code> is set in your <code className="bg-muted px-1 py-0.5 rounded">.env</code> file</li>
-                    <li>Check that your RPC URL is valid and accessible</li>
-                    <li>Check that your RPC URL is valid and accessible</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </GlowCard>
-        )}
+
 
         {/* FHEVM Loading State */}
         {!error && !isReady && (
