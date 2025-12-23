@@ -1,24 +1,30 @@
-import { useState } from "react";
-import { Shield, Send, History, CheckCircle, AlertCircle, Loader2, WifiOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Shield, Send, History, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GlowCard } from "@/components/GlowCard";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { EncryptionAnimation } from "@/components/EncryptionAnimation";
-import { useWallet } from "@/hooks/useWallet";
 import { useAgeVerification } from "@/hooks/useAgeVerification";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAccount } from 'wagmi';
-import { useFhevm } from "@/FhevmProvider";
+import { useFhevm } from "@/fhevm-sdk/index";
 
 export default function Dashboard() {
   const { isConnected, address } = useAccount();
-  const { instance, isReady, error } = useFhevm();
+  const { status: fhevmStatus, initialize: initializeFhevm, error: fhevmError } = useFhevm();
   const verification = useAgeVerification();
   const { toast } = useToast();
   const [ageInput, setAgeInput] = useState("");
+
+  // Auto-initialize FHEVM when wallet connects
+  useEffect(() => {
+    if (isConnected && fhevmStatus === 'idle') {
+      initializeFhevm();
+    }
+  }, [isConnected, fhevmStatus, initializeFhevm]);
 
   const handleSubmitAge = async () => {
     const age = parseInt(ageInput);
@@ -40,26 +46,29 @@ export default function Dashboard() {
       return;
     }
 
+    if (fhevmStatus !== 'ready') {
+      toast({
+        title: "FHEVM not ready",
+        description: "Please wait for FHEVM to initialize.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const result = await verification.submitAge(age);
       if (result) {
         toast({
-          title: "Age encrypted successfully!",
-          description: "Your encrypted age has been stored on-chain.",
+          title: "Age submitted successfully!",
+          description: "Your age has been encrypted and stored on-chain.",
         });
-        setAgeInput(""); // Clear input on success
-      } else {
-        toast({
-          title: "Encryption failed",
-          description: "Failed to encrypt and submit age. Please check the console for details.",
-          variant: "destructive",
-        });
+        setAgeInput("");
       }
     } catch (error: any) {
       console.error("Error submitting age:", error);
       toast({
         title: "Error",
-        description: error?.message || "An error occurred while encrypting your age.",
+        description: error?.message || "An error occurred while submitting your age.",
         variant: "destructive",
       });
     }
@@ -73,28 +82,48 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold mb-2">User Dashboard</h1>
             <p className="text-muted-foreground">
-              Submit your encrypted age for private verification.
+              Submit your age securely using Fully Homomorphic Encryption.
             </p>
-
           </div>
           <ConnectButton />
         </div>
 
-
-
-        {/* FHEVM Loading State */}
-        {!error && !isReady && (
-          <GlowCard className="border-primary/50 bg-primary/5">
-            <div className="flex items-center gap-4">
-              <Loader2 className="h-6 w-6 text-primary animate-spin" />
-              <div>
-                <h3 className="font-semibold text-primary mb-1">Initializing FHEVM...</h3>
-                <p className="text-sm text-muted-foreground">
-                  Connecting to Zama's Fully Homomorphic Encryption network. This may take a few moments.
-                </p>
+        {/* FHEVM Status Banner */}
+        {isConnected && (
+          <div className="mb-6">
+            {fhevmStatus === 'loading' && (
+              <GlowCard className="border-primary/50 bg-primary/5">
+                <div className="flex items-center gap-4">
+                  <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                  <div>
+                    <h3 className="font-semibold text-primary mb-1">Initializing FHEVM...</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Setting up the encryption environment.
+                    </p>
+                  </div>
+                </div>
+              </GlowCard>
+            )}
+            {fhevmStatus === 'error' && (
+              <GlowCard className="border-destructive/50 bg-destructive/5">
+                <div className="flex items-center gap-4">
+                  <AlertCircle className="h-6 w-6 text-destructive" />
+                  <div>
+                    <h3 className="font-semibold text-destructive mb-1">FHEVM Error</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {fhevmError || "Failed to initialize FHEVM."}
+                    </p>
+                  </div>
+                </div>
+              </GlowCard>
+            )}
+            {fhevmStatus === 'ready' && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-success/10 text-success text-xs font-medium border border-success/20 w-fit">
+                <CheckCircle className="h-3 w-3" />
+                FHEVM System Secure
               </div>
-            </div>
-          </GlowCard>
+            )}
+          </div>
         )}
 
         {/* Not connected state */}
@@ -134,35 +163,31 @@ export default function Dashboard() {
                       <Input
                         id="age"
                         type="number"
-                        placeholder="Enter your age"
+                        placeholder="18"
                         value={ageInput}
                         onChange={(e) => setAgeInput(e.target.value)}
                         min={1}
                         max={150}
-                        className="max-w-[200px] dark:border-neon-purple/30 dark:focus:border-neon-purple"
+                        className="max-w-[200px]"
+                        disabled={fhevmStatus !== 'ready'}
                       />
                       <Button
                         onClick={handleSubmitAge}
-                        disabled={!ageInput || verification.isEncrypting || !isReady}
+                        disabled={!ageInput || verification.isEncrypting || fhevmStatus !== 'ready'}
                         className={cn(
                           "gap-2",
-                          "dark:bg-gradient-to-r dark:from-neon-purple dark:to-neon-cyan",
-                          "dark:hover:shadow-[0_0_20px_hsl(var(--neon-purple)/0.5)]"
+                          "dark:bg-gradient-to-r dark:from-neon-purple dark:to-neon-cyan"
                         )}
-                        title={!isReady ? "FHEVM is initializing..." : ""}
                       >
                         <Send className="h-4 w-4" />
-                        {!isReady ? "Initializing..." : "Encrypt & Submit"}
+                        Encrypt & Submit
                       </Button>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/50 dark:bg-neon-purple/5 border border-border dark:border-neon-purple/20">
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
                     <p className="text-sm text-muted-foreground">
-                      <strong className="text-foreground">How it works:</strong> Your age
-                      will be encrypted using Fully Homomorphic Encryption (FHE). The
-                      encrypted value can be used for verification without ever revealing
-                      your actual age.
+                      <strong className="text-foreground">Security Note:</strong> Only you and authorized verifiers can ever see your actual age.
                     </p>
                   </div>
                 </div>
@@ -178,17 +203,17 @@ export default function Dashboard() {
             {verification.hasSubmittedAge && (
               <GlowCard glowColor="green">
                 <div className="flex items-center gap-2 mb-4">
-                  <CheckCircle className="h-5 w-5 text-success dark:text-neon-green" />
+                  <CheckCircle className="h-5 w-5 text-success" />
                   <h2 className="text-xl font-semibold">Verification Status</h2>
                 </div>
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-success/10 dark:bg-neon-green/10 border border-success/20 dark:border-neon-green/30">
-                  <div className="h-3 w-3 rounded-full bg-success dark:bg-neon-green animate-pulse" />
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-success/10 border border-success/20">
+                  <div className="h-3 w-3 rounded-full bg-success animate-pulse" />
                   <div>
-                    <p className="font-medium text-success dark:text-neon-green">
-                      Encrypted Age Stored
+                    <p className="font-medium text-success">
+                      Encrypted Age Submitted
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Your encrypted age is ready for verification queries.
+                      Your data is stored and secured on-chain.
                     </p>
                   </div>
                 </div>
@@ -198,28 +223,28 @@ export default function Dashboard() {
             {/* Activity Log */}
             <GlowCard glowColor="cyan">
               <div className="flex items-center gap-2 mb-4">
-                <History className="h-5 w-5 text-primary dark:text-neon-cyan" />
+                <History className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold">Activity Log</h2>
               </div>
 
               {verification.submissions.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No submissions yet. Submit your encrypted age above.</p>
+                  <p>No transactions yet.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {verification.submissions.map((submission) => (
                     <div
                       key={submission.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 dark:bg-card/50 border border-border dark:border-neon-cyan/20"
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-success dark:bg-neon-green" />
+                        <div className="h-2 w-2 rounded-full bg-success" />
                         <div>
-                          <p className="text-sm font-medium">Age Encrypted & Stored</p>
-                          <p className="text-xs text-muted-foreground font-mono">
-                            {submission.encryptedAge.slice(0, 30)}...
+                          <p className="text-sm font-medium">Age Encrypted & Sent</p>
+                          <p className="text-xs text-muted-foreground font-mono truncate max-w-[200px]">
+                            {submission.encryptedAge}
                           </p>
                         </div>
                       </div>
