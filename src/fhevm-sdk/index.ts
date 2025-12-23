@@ -8,3 +8,4 @@ export * from './core/index.js';
 
 // Framework adapters - explicit exports to avoid conflicts
 export { useWallet, useFhevm, useContract, useDecrypt, useEncrypt } from './adapters/react.js';
+export { FhevmProvider, useFhevmContext } from './adapters/FhevmProvider.js';
