@@ -11,7 +11,6 @@ import { useAgeVerification } from "@/hooks/useAgeVerification";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAccount } from 'wagmi';
-import { ZamaStatusIndicator } from "@/components/ZamaStatusIndicator";
 import { useFhevm } from "@/FhevmProvider";
 
 export default function Dashboard() {
@@ -76,9 +75,7 @@ export default function Dashboard() {
             <p className="text-muted-foreground">
               Submit your encrypted age for private verification.
             </p>
-            <div className="mt-2">
-              <ZamaStatusIndicator />
-            </div>
+
           </div>
           <ConnectButton />
         </div>
@@ -100,7 +97,7 @@ export default function Dashboard() {
                   <ul className="list-disc list-inside ml-4 space-y-1">
                     <li>Ensure <code className="bg-muted px-1 py-0.5 rounded">VITE_SEPOLIA_RPC_URL</code> is set in your <code className="bg-muted px-1 py-0.5 rounded">.env</code> file</li>
                     <li>Check that your RPC URL is valid and accessible</li>
-                    <li>Verify the Zama relayer is online at <a href="https://status.zama.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">status.zama.org</a></li>
+                    <li>Check that your RPC URL is valid and accessible</li>
                   </ul>
                 </div>
               </div>
