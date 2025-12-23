@@ -33,7 +33,7 @@ async function initializeBrowserFheInstance() {
 
   // Check for both uppercase and lowercase versions of RelayerSDK
   let sdk = (window as any).RelayerSDK || (window as any).relayerSDK;
-  
+
   if (!sdk) {
     throw new Error('RelayerSDK not loaded. Please include the script tag in your HTML:\n<script src="https://cdn.zama.org/relayer-sdk-js/0.3.0-5/relayer-sdk-js.umd.cjs"></script>');
   }
@@ -42,10 +42,11 @@ async function initializeBrowserFheInstance() {
 
   // Initialize SDK with CDN
   await initSDK();
-    console.log('✅ FHEVM SDK initialized with CDN');
-  
+  console.log('✅ FHEVM SDK initialized with CDN');
+
   const config = { ...SepoliaConfig, network: window.ethereum };
-  
+  console.log('🔍 FHEVM Config being used:', config);
+
   try {
     fheInstance = await createInstance(config);
     return fheInstance;
@@ -62,15 +63,15 @@ async function initializeBrowserFheInstance() {
 async function initializeNodeFheInstance(rpcUrl?: string) {
   try {
     console.log('🚀 Initializing REAL FHEVM Node.js instance...');
-    
+
     // Use eval to prevent webpack from analyzing these imports
     const relayerSDKModule = await eval('import("@zama-fhe/relayer-sdk/node")');
     const { createInstance, SepoliaConfig, generateKeypair } = relayerSDKModule;
-    
+
     // Create an EIP-1193 compatible provider for Node.js
     const ethersModule = await eval('import("ethers")');
     const provider = new ethersModule.ethers.JsonRpcProvider(rpcUrl || 'https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
-    
+
     // Create EIP-1193 provider wrapper
     const eip1193Provider = {
       request: async ({ method, params }: { method: string; params: any[] }) => {
@@ -91,15 +92,15 @@ async function initializeNodeFheInstance(rpcUrl?: string) {
             throw new Error(`Unsupported method: ${method}`);
         }
       },
-      on: () => {},
-      removeListener: () => {}
+      on: () => { },
+      removeListener: () => { }
     };
-    
-    const config = { 
-      ...SepoliaConfig, 
-      network: eip1193Provider 
+
+    const config = {
+      ...SepoliaConfig,
+      network: eip1193Provider
     };
-    
+
     fheInstance = await createInstance(config);
     console.log('✅ REAL FHEVM Node.js instance created successfully!');
     return fheInstance;
@@ -122,7 +123,7 @@ export async function decryptValue(encryptedBytes: string, contractAddress: stri
 
   try {
     console.log('🔐 Using EIP-712 user decryption for handle:', encryptedBytes);
-    
+
     // Use EIP-712 user decryption instead of public decryption
     const keypair = fhe.generateKeypair();
     const handleContractPairs = [
@@ -131,7 +132,7 @@ export async function decryptValue(encryptedBytes: string, contractAddress: stri
         contractAddress: contractAddress,
       },
     ];
-    
+
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = "10";
     const contractAddresses = [contractAddress];
@@ -176,8 +177,8 @@ export async function decryptValue(encryptedBytes: string, contractAddress: stri
  * Batch decrypt multiple encrypted values using EIP-712 user decryption
  */
 export async function batchDecryptValues(
-  handles: string[], 
-  contractAddress: string, 
+  handles: string[],
+  contractAddress: string,
   signer: any
 ): Promise<Record<string, number>> {
   const fhe = getFheInstance();
@@ -185,13 +186,13 @@ export async function batchDecryptValues(
 
   try {
     console.log('🔐 Using EIP-712 batch user decryption for handles:', handles);
-    
+
     const keypair = fhe.generateKeypair();
     const handleContractPairs = handles.map(handle => ({
       handle,
       contractAddress: contractAddress,
     }));
-    
+
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = "10";
     const contractAddresses = [contractAddress];
@@ -264,7 +265,7 @@ export async function encryptValue(
   for (const d of plainDigits) {
     inputHandle.add8(d);
   }
-  
+
   const ciphertextBlob = await inputHandle.encrypt();
   return ciphertextBlob;
 }
@@ -277,14 +278,14 @@ export async function createEncryptedInput(contractAddress: string, userAddress:
   if (!fhe) throw new Error('FHE instance not initialized. Call initializeFheInstance() first.');
 
   console.log(`🔐 Creating encrypted input for contract ${contractAddress}, user ${userAddress}, value ${value}`);
-  
+
   const inputHandle = fhe.createEncryptedInput(contractAddress, userAddress);
   inputHandle.add32(value);
   const result = await inputHandle.encrypt();
-  
+
   console.log('✅ Encrypted input created successfully');
   console.log('🔍 Encrypted result structure:', result);
-  
+
   // The FHEVM SDK returns an object with handles and inputProof
   // We need to extract the correct values for the contract
   if (result && typeof result === 'object') {
@@ -310,7 +311,7 @@ export async function createEncryptedInput(contractAddress: string, userAddress:
       };
     }
   }
-  
+
   // If result is not an object, use it directly
   return {
     encryptedData: result,
@@ -334,10 +335,10 @@ export async function publicDecrypt(encryptedBytes: string): Promise<number> {
       console.log('🔓 Calling publicDecrypt with handle:', handle);
       const result = await fhe.publicDecrypt([handle]);
       console.log('🔓 publicDecrypt returned:', result);
-      
+
       // SDK 0.3.0-5 returns: {clearValues: {...}, abiEncodedClearValues: '...', decryptionProof: '...'}
       let decryptedValue;
-      
+
       if (result && typeof result === 'object') {
         // Check for SDK 0.3.0-5 format with clearValues
         if (result.clearValues && typeof result.clearValues === 'object') {
@@ -360,7 +361,7 @@ export async function publicDecrypt(encryptedBytes: string): Promise<number> {
         decryptedValue = result;
         console.log('🔓 Direct value:', decryptedValue);
       }
-      
+
       // Convert BigInt or number to regular number
       let numberValue;
       if (typeof decryptedValue === 'bigint') {
@@ -370,7 +371,7 @@ export async function publicDecrypt(encryptedBytes: string): Promise<number> {
         numberValue = Number(decryptedValue);
         console.log('🔓 Converted to number:', numberValue);
       }
-      
+
       if (isNaN(numberValue)) {
         console.error('❌ Decryption returned NaN. Raw value:', decryptedValue);
         console.error('❌ Full response structure:', {
@@ -381,7 +382,7 @@ export async function publicDecrypt(encryptedBytes: string): Promise<number> {
         });
         throw new Error(`Decryption returned invalid value: ${decryptedValue}`);
       }
-      
+
       console.log('🔓 Final number value:', numberValue);
       return numberValue;
     } else {
@@ -434,7 +435,7 @@ export async function requestUserDecryption(
     startTimeStamp,
     durationDays
   );
-  
+
   return Number(result[ciphertextHandle]);
 }
 
