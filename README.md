@@ -14,9 +14,37 @@
 *   **Frontend**: React, TypeScript, Vite
 *   **Styling**: Tailwind CSS, shadcn/ui
 *   **Web3**: wagmi, viem, RainbowKit
-*   **Encryption**: Zama `fhevmjs`
+*   **Encryption**: Zama `fhevmjs` / Relayer SDK v0.3.0-5
 
-## Getting Started
+## Technical Architecture
+
+AgeVault leverages the Zama FHEVM to perform **Compute-to-Data** without ever exposing the underlying user data.
+
+```mermaid
+graph TD
+    User((User)) -->|Input: Age 25| SDK[FHEVM SDK]
+    SDK -->|fhe.encrypt| Cipher{Ciphertext}
+    Cipher -->|submitAge| EVM[Sepolia Blockchain]
+    EVM -->|Store| Contract[AgeCheck Contract]
+    
+    Verifier((Verifier)) -->|threshold: 18| Contract
+    Contract -->|FHE.ge| Result{ebool Result}
+    Result -->|EIP-712 Decryption| Verifier
+```
+
+### Core Architecture Highlights
+- **Local Encryption**: Data is encrypted using `fhevmjs` before it ever touches the network.
+- **On-Chain Privacy**: The contract stores `euint8` (encrypted 8-bit integers).
+- **Homomorphic Comparison**: Verification happens via `FHE.ge(userAge, threshold)` - comparing encrypted values without decryption.
+
+## Zama Developer Program - Builder Track
+
+This project is built as part of the Zama Developer Program. It fulfills the following judging criteria:
+
+- **Original Tech Architecture**: Uses `@fhevm/solidity@0.10.0` for privacy-preserving age logic.
+- **Working Demo**: Deployed on Vercel and Sepolia testnet.
+- **Testing**: Comprehensive unit test suite included in `/test`.
+- **UI/UX**: Custom "Neon-Glassmorphism" design with real-time FHE status feedback.
 
 ### Prerequisites
 
