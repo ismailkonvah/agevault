@@ -10,8 +10,20 @@ if (projectId === 'YOUR_PROJECT_ID') {
   );
 }
 
+const defaultRpcUrl = 'https://rpc.sepolia.zama.ai';
+const rpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL || defaultRpcUrl;
+
 export const config = getDefaultConfig({
   appName: 'Private Age Check',
   projectId,
-  chains: [sepolia],
+  chains: [
+    {
+      ...sepolia,
+      rpcUrls: {
+        ...sepolia.rpcUrls,
+        default: { http: [rpcUrl] },
+        public: { http: [rpcUrl] },
+      },
+    }
+  ],
 });

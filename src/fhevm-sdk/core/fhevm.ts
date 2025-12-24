@@ -70,7 +70,7 @@ async function initializeNodeFheInstance(rpcUrl?: string) {
 
     // Create an EIP-1193 compatible provider for Node.js
     const ethersModule = await eval('import("ethers")');
-    const provider = new ethersModule.ethers.JsonRpcProvider(rpcUrl || 'https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
+    const provider = new ethersModule.ethers.JsonRpcProvider(rpcUrl || 'https://rpc.sepolia.zama.ai');
 
     // Create EIP-1193 provider wrapper
     const eip1193Provider = {
