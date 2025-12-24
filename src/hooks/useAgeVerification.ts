@@ -3,7 +3,7 @@ import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { useFhevm, useEncrypt } from "../fhevm-sdk/index";
 import AgeCheckABI from "../abis/AgeCheck.json";
 
-const CONTRACT_ADDRESS = (import.meta.env.VITE_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000") as `0x${string}`;
+const CONTRACT_ADDRESS = (import.meta.env.VITE_CONTRACT_ADDRESS?.toLowerCase() || "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 interface Submission {
   id: string;
