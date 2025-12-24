@@ -23,6 +23,7 @@ interface AgeVerificationState {
   verifications: VerificationResult[];
   isEncrypting: boolean;
   isVerifying: boolean;
+  status: "idle" | "encrypting" | "submitting" | "confirmed" | "error";
   currentAge: number | null;
 }
 
@@ -32,6 +33,7 @@ export function useAgeVerification() {
     verifications: [],
     isEncrypting: false,
     isVerifying: false,
+    status: "idle",
     currentAge: null,
   });
 
@@ -62,7 +64,7 @@ export function useAgeVerification() {
       throw new Error(error);
     }
 
-    setState((prev) => ({ ...prev, isEncrypting: true, currentAge: age }));
+    setState((prev) => ({ ...prev, isEncrypting: true, status: "encrypting", currentAge: age }));
 
     try {
       console.log("Starting encryption for age...");
@@ -98,6 +100,8 @@ export function useAgeVerification() {
           proof: proofHex ? (proofHex.slice(0, 20) + "...") : "null"
         });
 
+        setState((prev) => ({ ...prev, status: "submitting" }));
+
         txHash = await writeContractAsync({
           address: CONTRACT_ADDRESS,
           abi: AgeCheckABI,
@@ -129,11 +133,11 @@ export function useAgeVerification() {
         // For now, let's keep it simple but mark as pending.
       }
 
-      setState((prev) => ({ ...prev, isEncrypting: false }));
+      setState((prev) => ({ ...prev, isEncrypting: false, status: "confirmed" }));
       return encryptedDataHex;
     } catch (e: any) {
       console.error("Encryption/Submission failed:", e);
-      setState((prev) => ({ ...prev, isEncrypting: false }));
+      setState((prev) => ({ ...prev, isEncrypting: false, status: "error" }));
       throw e;
     }
   }, [isReady, address, encrypt, writeContractAsync]);
@@ -159,6 +163,7 @@ export function useAgeVerification() {
       verifications: [],
       isEncrypting: false,
       isVerifying: false,
+      status: "idle",
       currentAge: null,
     });
   }, []);

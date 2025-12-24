@@ -96,7 +96,7 @@ export default function Index() {
                 )}
               >
                 <Link to="/dashboard">
-                  Try Demo
+                  Try Now
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
@@ -198,7 +198,7 @@ export default function Index() {
               )}
             >
               <Link to="/dashboard">
-                Launch Demo
+                Launch Now
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>

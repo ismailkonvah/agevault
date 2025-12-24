@@ -150,53 +150,71 @@ export default function Dashboard() {
                 <h2 className="text-xl font-semibold">Submit Encrypted Age</h2>
               </div>
 
-              {!verification.isEncrypting ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="age" className="text-sm font-medium">
-                      Your Age
-                    </Label>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      This will be encrypted before leaving your browser.
-                    </p>
-                    <div className="flex gap-3">
-                      <Input
-                        id="age"
-                        type="number"
-                        placeholder="18"
-                        value={ageInput}
-                        onChange={(e) => setAgeInput(e.target.value)}
-                        min={1}
-                        max={150}
-                        className="max-w-[200px]"
-                        disabled={fhevmStatus !== 'ready'}
-                      />
-                      <Button
-                        onClick={handleSubmitAge}
-                        disabled={!ageInput || verification.isEncrypting || fhevmStatus !== 'ready'}
-                        className={cn(
-                          "gap-2",
-                          "dark:bg-gradient-to-r dark:from-neon-purple dark:to-neon-cyan"
-                        )}
-                      >
-                        <Send className="h-4 w-4" />
-                        Encrypt & Submit
-                      </Button>
-                    </div>
+              <div className="space-y-4">
+                <div className={cn(verification.isEncrypting && "opacity-50 pointer-events-none")}>
+                  <Label htmlFor="age" className="text-sm font-medium">
+                    Your Age
+                  </Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    This will be encrypted before leaving your browser.
+                  </p>
+                  <div className="flex gap-3">
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="18"
+                      value={ageInput}
+                      onChange={(e) => setAgeInput(e.target.value)}
+                      min={1}
+                      max={150}
+                      className="max-w-[200px]"
+                      disabled={fhevmStatus !== 'ready' || verification.isEncrypting}
+                    />
+                    <Button
+                      onClick={handleSubmitAge}
+                      disabled={!ageInput || verification.isEncrypting || fhevmStatus !== 'ready'}
+                      className={cn(
+                        "gap-2 min-w-[160px]",
+                        "dark:bg-gradient-to-r dark:from-neon-purple dark:to-neon-cyan"
+                      )}
+                    >
+                      {verification.status === "encrypting" ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Encrypting...
+                        </>
+                      ) : verification.status === "submitting" ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          Encrypt & Submit
+                        </>
+                      )}
+                    </Button>
                   </div>
+                </div>
 
+                {verification.isEncrypting && (
+                  <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <EncryptionAnimation
+                      isActive={verification.isEncrypting}
+                      inputValue={ageInput}
+                    />
+                  </div>
+                )}
+
+                {!verification.isEncrypting && (
                   <div className="p-4 rounded-lg bg-muted/50 border border-border">
                     <p className="text-sm text-muted-foreground">
                       <strong className="text-foreground">Security Note:</strong> Only you and authorized verifiers can ever see your actual age.
                     </p>
                   </div>
-                </div>
-              ) : (
-                <EncryptionAnimation
-                  isActive={verification.isEncrypting}
-                  inputValue={ageInput}
-                />
-              )}
+                )}
+              </div>
             </GlowCard>
 
             {/* Status Card */}
