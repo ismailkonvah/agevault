@@ -97,6 +97,7 @@ export function useAgeVerification() {
           abi: AgeCheckABI,
           functionName: "submitAge",
           args: [encryptedDataHex, proofHex],
+          gas: 5000000n, // Manual gas limit to prevent Out Of Gas reverts on standard nodes
         });
         console.log("✅ Transaction hash generated:", txHash);
       } else {
