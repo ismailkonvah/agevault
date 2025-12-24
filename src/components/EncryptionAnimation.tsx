@@ -5,37 +5,68 @@ import { cn } from "@/lib/utils";
 interface EncryptionAnimationProps {
   isActive: boolean;
   inputValue?: string;
+  status?: "idle" | "encrypting" | "submitting" | "confirmed" | "error";
   onComplete?: () => void;
 }
 
-const matrixChars = "01アイウエオカキクケコサシスセソタチツテト";
+const matrixChars = "0123456789ABCDEFアイウエオカキクケコサシスセソタチツテト";
 
 export function EncryptionAnimation({
   isActive,
   inputValue = "25",
+  status = "encrypting",
 }: EncryptionAnimationProps) {
   const [encryptedText, setEncryptedText] = useState("");
+  const [displayAge, setDisplayAge] = useState(inputValue);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (!isActive) {
       setEncryptedText("");
+      setDisplayAge(inputValue);
       setProgress(0);
       return;
     }
 
     const interval = setInterval(() => {
-      setEncryptedText(
-        Array.from(
-          { length: 24 },
-          () => matrixChars[Math.floor(Math.random() * matrixChars.length)]
-        ).join("")
-      );
-      setProgress((prev) => Math.min(prev + 4, 100));
-    }, 100);
+      // Scramble the encrypted text area
+      if (status === "encrypting") {
+        setEncryptedText(
+          Array.from(
+            { length: 32 },
+            () => matrixChars[Math.floor(Math.random() * matrixChars.length)]
+          ).join("")
+        );
+        // Slowly increase progress up to 95% during encryption
+        setProgress((prev) => (prev < 95 ? prev + Math.random() * 2 : prev));
+      } else if (status === "submitting") {
+        // Once submitting, show something more "hex-like" to represent real ciphertext
+        const hexChars = "0123456789abcdef";
+        setEncryptedText(
+          "0x" + Array.from(
+            { length: 40 },
+            () => hexChars[Math.floor(Math.random() * hexChars.length)]
+          ).join("")
+        );
+        setProgress(98);
+      } else if (status === "confirmed") {
+        setProgress(100);
+      }
+
+      // Scramble the input age slightly to show "processing"
+      if (Math.random() > 0.7 && status === "encrypting") {
+        const chars = inputValue.split("");
+        const scrambled = chars.map(c =>
+          Math.random() > 0.5 ? matrixChars[Math.floor(Math.random() * 10)] : c
+        ).join("");
+        setDisplayAge(scrambled);
+      } else {
+        setDisplayAge(inputValue);
+      }
+    }, 80);
 
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [isActive, inputValue, status]);
 
   if (!isActive) return null;
 
@@ -85,7 +116,7 @@ export function EncryptionAnimation({
                 "animate-encrypt-pulse"
               )}
             >
-              {inputValue}
+              {displayAge}
             </div>
           </div>
 

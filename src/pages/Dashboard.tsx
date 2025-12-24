@@ -203,6 +203,7 @@ export default function Dashboard() {
                     <EncryptionAnimation
                       isActive={verification.isEncrypting}
                       inputValue={ageInput}
+                      status={verification.status}
                     />
                   </div>
                 )}
