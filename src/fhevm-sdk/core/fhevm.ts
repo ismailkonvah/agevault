@@ -277,9 +277,26 @@ export async function createEncryptedInput(contractAddress: string, userAddress:
   const fhe = getFheInstance();
   if (!fhe) throw new Error('FHE instance not initialized. Call initializeFheInstance() first.');
 
-  console.log(`🔐 Creating encrypted ${bits}-bit input for contract ${contractAddress}, user ${userAddress}, value ${value}`);
+  // DEFENSIVE: Normalize addresses to ensure no hidden characters or casing issues
+  const normalizedContract = contractAddress.trim();
+  const normalizedUser = userAddress.trim();
 
-  const inputHandle = fhe.createEncryptedInput(contractAddress, userAddress);
+  const isAddress = (addr: string) => /^0x[0-9a-fA-F]{40}$/.test(addr);
+
+  console.log(`🔐 Creating encrypted ${bits}-bit input`);
+  console.log(`📍 Contract: "${normalizedContract}" (valid: ${isAddress(normalizedContract)})`);
+  console.log(`👤 User: "${normalizedUser}" (valid: ${isAddress(normalizedUser)})`);
+  console.log(`🔢 Value: ${value}`);
+
+  // Log raw bytes of the addresses if they fail validation, or for deep debugging
+  const toCharCodes = (s: string) => Array.from(s).map(c => c.charCodeAt(0)).join(',');
+  console.log(`🔍 Contract CharCodes: ${toCharCodes(normalizedContract)}`);
+
+  if (!isAddress(normalizedContract)) {
+    throw new Error(`Contract address is not a valid 0x-prefixed 20-byte address: "${normalizedContract}"`);
+  }
+
+  const inputHandle = fhe.createEncryptedInput(normalizedContract, normalizedUser);
 
   if (bits === 8) inputHandle.add8(value);
   else if (bits === 16) inputHandle.add16(value);
