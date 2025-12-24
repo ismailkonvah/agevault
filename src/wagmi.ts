@@ -10,8 +10,16 @@ if (projectId === 'YOUR_PROJECT_ID') {
   );
 }
 
+import { http } from 'wagmi';
+
+const alchemyUrl = 'https://eth-sepolia.g.alchemy.com/v2/A4RzNvTZFalntQVYsz8om';
+const rpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL || alchemyUrl;
+
 export const config = getDefaultConfig({
   appName: 'Private Age Check',
   projectId,
   chains: [sepolia],
+  transports: {
+    [sepolia.id]: http(rpcUrl),
+  },
 });
