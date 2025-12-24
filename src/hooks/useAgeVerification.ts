@@ -66,6 +66,9 @@ export function useAgeVerification() {
 
     setState((prev) => ({ ...prev, isEncrypting: true, status: "encrypting", currentAge: age }));
 
+    // Yield to the main thread to allow React to update the UI before heavy WASM work starts
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     try {
       console.log("Starting encryption for age...");
 
