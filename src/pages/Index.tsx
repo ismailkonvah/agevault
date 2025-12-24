@@ -34,7 +34,7 @@ const benefits = [
   {
     icon: Shield,
     title: "Cryptographic Security",
-    description: "Built on TFHE (Fully Homomorphic Encryption) with mathematical security guarantees.",
+    description: "Built on FHE (Fully Homomorphic Encryption) with mathematical security guarantees.",
   },
   {
     icon: Zap,

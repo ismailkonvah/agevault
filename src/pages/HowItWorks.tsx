@@ -31,31 +31,26 @@ const fheSteps = [
 ];
 
 const contractCode = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
-import "fhevm/lib/TFHE.sol";
+import "@fhevm/solidity/lib/FHE.sol";
 
 contract PrivateAgeVerification {
     // Encrypted age storage per user
-    mapping(address => euint8) private encryptedAges;
+    mapping(address => euint8) internal encryptedAges;
     
     // Store encrypted age (user calls this)
-    function storeEncryptedAge(einput encryptedAge, bytes calldata inputProof) public {
-        encryptedAges[msg.sender] = TFHE.asEuint8(encryptedAge, inputProof);
+    function submitAge(externalEuint8 encryptedAge, bytes calldata inputProof) public {
+        encryptedAges[msg.sender] = FHE.fromExternal(encryptedAge, inputProof);
     }
     
     // Verify if user is over a threshold (verifier calls this)
-    function isOverAge(address user, uint8 threshold) public view returns (ebool) {
+    function verifyAge(address user, uint8 threshold) public returns (ebool) {
         euint8 userAge = encryptedAges[user];
-        euint8 encryptedThreshold = TFHE.asEuint8(threshold);
+        euint8 encryptedThreshold = FHE.asEuint8(threshold);
         
         // Compare encrypted values - returns encrypted boolean
-        return TFHE.ge(userAge, encryptedThreshold);
-    }
-    
-    // Decrypt result (only authorized)
-    function decryptResult(ebool encryptedResult) public view returns (bool) {
-        return TFHE.decrypt(encryptedResult);
+        return FHE.ge(userAge, encryptedThreshold);
     }
 }`;
 
@@ -189,7 +184,7 @@ export default function HowItWorks() {
               <div>
                 <h3 className="font-medium mb-1">Mathematically Proven</h3>
                 <p className="text-sm text-muted-foreground">
-                  TFHE encryption provides 128-bit security with formal proofs.
+                  FHE encryption provides 128-bit security with formal proofs.
                 </p>
               </div>
             </div>
