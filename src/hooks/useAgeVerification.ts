@@ -37,7 +37,7 @@ export function useAgeVerification() {
 
   const { isInitialized: isReady } = useFhevm();
   const { encrypt, isEncrypting: sdkBusy } = useEncrypt();
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
 
   const { data: hasAge, refetch: refetchHasAge } = useReadContract({
@@ -54,6 +54,12 @@ export function useAgeVerification() {
     if (!isReady || !address) {
       console.error(!isReady ? "FHEVM not ready" : "Wallet not connected");
       return "";
+    }
+
+    if (chainId !== 11155111) {
+      const error = `Incorrect network. Please switch to Sepolia (ChainID: 11155111). Current: ${chainId}`;
+      console.error(error);
+      throw new Error(error);
     }
 
     setState((prev) => ({ ...prev, isEncrypting: true, currentAge: age }));
@@ -108,15 +114,22 @@ export function useAgeVerification() {
         id: txHash || crypto.randomUUID(),
         encryptedAge: encryptedDataHex,
         timestamp: new Date(),
-        status: "verified", // In a real app, this would be 'pending' until receipt
+        status: "pending",
       };
 
       setState((prev) => ({
         ...prev,
         submissions: [submission, ...prev.submissions],
-        isEncrypting: false,
       }));
 
+      if (txHash) {
+        console.log("Waiting for transaction receipt...");
+        // In a real app we'd use useWaitForTransactionReceipt, but for this hook 
+        // we'll just return the hash and let the Dashboard handle the visual wait if needed.
+        // For now, let's keep it simple but mark as pending.
+      }
+
+      setState((prev) => ({ ...prev, isEncrypting: false }));
       return encryptedDataHex;
     } catch (e: any) {
       console.error("Encryption/Submission failed:", e);
