@@ -85,17 +85,20 @@ export function useAgeVerification() {
       let txHash = "";
 
       if (CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
-        console.log("Submitting to contract...");
+        console.log("Submitting to contract...", {
+          address: CONTRACT_ADDRESS,
+          user: address,
+          encryptedData: encryptedDataHex,
+          proof: proofHex ? (proofHex.slice(0, 20) + "...") : "null"
+        });
+
         txHash = await writeContractAsync({
           address: CONTRACT_ADDRESS,
           abi: AgeCheckABI,
           functionName: "submitAge",
           args: [encryptedDataHex, proofHex],
         });
-        console.log("Transaction sent:", txHash);
-
-        // Optionally wait for receipt if we had the receipt hook/client
-        // For now, we'll mark as pending and log it
+        console.log("✅ Transaction hash generated:", txHash);
       } else {
         txHash = "0x" + crypto.randomUUID().replace(/-/g, '');
       }
