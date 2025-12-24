@@ -1,10 +1,4 @@
 {
-    "headers": [
-        {
-            "source": "/(.*)",
-            "headers": []
-        }
-    ],
     "rewrites": [
         {
             "source": "/(.*)",
