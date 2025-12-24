@@ -125,17 +125,18 @@ export async function decryptValue(encryptedBytes: string, contractAddress: stri
     console.log('🔐 Using EIP-712 user decryption for handle:', encryptedBytes);
 
     // Use EIP-712 user decryption instead of public decryption
+    const normalizedContract = contractAddress.trim().toLowerCase();
     const keypair = fhe.generateKeypair();
     const handleContractPairs = [
       {
         handle: encryptedBytes,
-        contractAddress: contractAddress,
+        contractAddress: normalizedContract,
       },
     ];
 
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = "10";
-    const contractAddresses = [contractAddress];
+    const contractAddresses = [normalizedContract];
 
     const eip712 = fhe.createEIP712(
       keypair.publicKey,
@@ -187,15 +188,16 @@ export async function batchDecryptValues(
   try {
     console.log('🔐 Using EIP-712 batch user decryption for handles:', handles);
 
+    const normalizedContract = contractAddress.trim().toLowerCase();
     const keypair = fhe.generateKeypair();
     const handleContractPairs = handles.map(handle => ({
       handle,
-      contractAddress: contractAddress,
+      contractAddress: normalizedContract,
     }));
 
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = "10";
-    const contractAddresses = [contractAddress];
+    const contractAddresses = [normalizedContract];
 
     const eip712 = fhe.createEIP712(
       keypair.publicKey,
@@ -278,10 +280,10 @@ export async function createEncryptedInput(contractAddress: string, userAddress:
   if (!fhe) throw new Error('FHE instance not initialized. Call initializeFheInstance() first.');
 
   // DEFENSIVE: Normalize addresses to ensure no hidden characters or casing issues
-  const normalizedContract = contractAddress.trim();
-  const normalizedUser = userAddress.trim();
+  const normalizedContract = contractAddress.trim().toLowerCase();
+  const normalizedUser = userAddress.trim().toLowerCase();
 
-  const isAddress = (addr: string) => /^0x[0-9a-fA-F]{40}$/.test(addr);
+  const isAddress = (addr: string) => /^0x[0-9a-f]{40}$/.test(addr);
 
   console.log(`🔐 Creating encrypted ${bits}-bit input`);
   console.log(`📍 Contract: "${normalizedContract}" (valid: ${isAddress(normalizedContract)})`);
@@ -293,7 +295,7 @@ export async function createEncryptedInput(contractAddress: string, userAddress:
   console.log(`🔍 Contract CharCodes: ${toCharCodes(normalizedContract)}`);
 
   if (!isAddress(normalizedContract)) {
-    throw new Error(`Contract address is not a valid 0x-prefixed 20-byte address: "${normalizedContract}"`);
+    throw new Error(`Contract address is not a valid 0x-prefixed 20-byte address (lowercase expected): "${normalizedContract}"`);
   }
 
   const inputHandle = fhe.createEncryptedInput(normalizedContract, normalizedUser);
